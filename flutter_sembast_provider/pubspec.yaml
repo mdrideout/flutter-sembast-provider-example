@@ -1,0 +1,26 @@
+name: fluttersembastprovider
+description: An example flutter app using Sembast for local persistent storage and Provider for state management.
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  sembast: ^2.4.4+1
+  path_provider: ^1.6.9
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+# The following section is specific to Flutter.
+flutter:
+
+  uses-material-design: true
