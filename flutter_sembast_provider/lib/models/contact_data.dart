@@ -48,25 +48,53 @@ class ContactData extends ChangeNotifier {
       finder: finder,
     );
 
-    return contactSnapshots.map((snapshot) {
+    List<Contact> contacts = contactSnapshots.map((snapshot) {
       final contact = Contact.fromMap(snapshot.value);
 
       contact.id = snapshot.key;
       return contact;
     }).toList();
+
+    // Update UI
+    _contacts = contacts;
+    notifyListeners();
+
+    return contacts;
   }
 
-  // TODO: Get All Contacts
+  /// Get A Contact
+  Future<Contact> getContact(int id) async {
+    // Get the contact JSON from the sembast DB
+    var record = await _contactStore.record(id).get(await _db);
+//    print("Record: " + record.toString()); // json of contact object
 
-  // TODO: Get A Contact
+    // Convert to a Contact Object using the fromMap function
+    Contact contact = Contact.fromMap(record);
+//    print("Contact: " + contact.toString()); // instance of a contact object
 
-  // TODO: Contacts Count
+    return contact;
+  }
+
+  /// Get Contacts Count
+  int get contactsCount {
+    return _contacts.length;
+  }
+
+  /// Get Current Provider List of Contacts
+  List<Contact> get contactsList {
+    return _contacts;
+  }
 
   // TODO: Save Contact
 
   // TODO: Delete Contact
 
   // TODO: Set Active Contact
+  /// Set Active Contact
+  void setActiveContact(int id) async {
+    _activeContact = await getContact(id);
+    notifyListeners();
+  }
 
   // TODO: Get Active Contact
 }
