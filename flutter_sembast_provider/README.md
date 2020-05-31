@@ -1,16 +1,7 @@
-# fluttersembastprovider
+# Flutter Sembast Provider Example
+A basic contact management flutter app demonstrating the use of Provider for state management and Sembast for persistent data storage.
 
-An example flutter app using Sembast for local persistent storage and Provider for state management.
+- [Sembast](https://pub.dev/packages/sembast)
+- [Provider](https://pub.dev/packages/provider)
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Every time persistent data is changed (when a contact is added, edited, or deleted from sembast), the provider data is refreshed from sembast. The ui is updated by calling `notifyListeners();`. You will notice the UI on all screens is instantly updated with the latest data, and the data persists when the app is closed.
