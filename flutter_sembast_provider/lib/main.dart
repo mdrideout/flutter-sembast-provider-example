@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:fluttersembastprovider/models/contact_data.dart';
+import 'package:fluttersembastprovider/screens/contact_edit_screen.dart';
 import 'package:fluttersembastprovider/screens/contact_list_screen.dart';
+import 'package:fluttersembastprovider/screens/contact_view_screen.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -17,13 +19,17 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => ContactData(),
       child: MaterialApp(
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-        ),
-        home: MyHomePage(title: 'Flutter Demo Home Page'),
-      ),
+          title: 'Flutter Demo',
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+            visualDensity: VisualDensity.adaptivePlatformDensity,
+          ),
+          initialRoute: ContactListScreen.screenId,
+          routes: {
+            ContactListScreen.screenId: (context) => ContactListScreen(),
+            ContactEditScreen.screenId: (context) => ContactEditScreen(),
+            ContactViewScreen.screenId: (context) => ContactViewScreen(),
+          }),
     );
   }
 }

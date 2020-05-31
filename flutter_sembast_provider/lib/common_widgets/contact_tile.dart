@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttersembastprovider/models/contact.dart';
 import 'package:fluttersembastprovider/models/contact_data.dart';
+import 'package:fluttersembastprovider/screens/contact_view_screen.dart';
 import 'package:provider/provider.dart';
 
 class ContactTile extends StatelessWidget {
@@ -16,8 +17,13 @@ class ContactTile extends StatelessWidget {
         Contact currentContact = contactData.contactsList[tileIndex];
 
         return ListTile(
-          onLongPress: () {
-//            contactData.removeTask(currentTask);
+          onTap: () {
+            // Set activeContact
+            Provider.of<ContactData>(context, listen: false)
+                .setActiveContact(currentContact.id);
+
+            // Navigate to view
+            Navigator.pushNamed(context, ContactViewScreen.screenId);
           },
           title: Text(
             currentContact.name ?? "New Contact",

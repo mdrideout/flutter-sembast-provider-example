@@ -1,43 +1,57 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttersembastprovider/models/contact.dart';
 import 'package:fluttersembastprovider/models/contact_data.dart';
 import 'package:provider/provider.dart';
-import 'package:tpag_app/common_widgets/styled_button.dart';
-import 'package:tpag_app/models/client.dart';
-import 'package:tpag_app/models/client_data.dart';
 
-import 'auth_password_reset_screen.dart';
-
-/// Client Screen
-/// Builds a view of the client based on the provided client key.
-/// We get the client data using the key - as a Consumer of provider
-class AuthLoginScreen extends StatefulWidget {
-  static const String screenId = '/auth_login_screen';
+/// Contact Edit Screen
+/// Edits the "activeContact" and allows saving.
+class ContactEditScreen extends StatefulWidget {
+  static const String screenId = '/contact_edit_screen';
 
   @override
-  _AuthLoginScreenState createState() => _AuthLoginScreenState();
+  _ContactEditScreenState createState() => _ContactEditScreenState();
 }
 
-class _AuthLoginScreenState extends State<AuthLoginScreen> {
-  final _auth = FirebaseAuth.instance;
-
+class _ContactEditScreenState extends State<ContactEditScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  String email;
+  // Variables to hold validation errors
   String emailError;
-  String password;
-  String passwordError;
-  bool _showSpinner = false;
+  String nameError;
 
-  Widget loginForm() {
+  // Set Up Field Controllers
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+
+  // initState load activeContact values into the local state text controllers
+  @override
+  void initState() {
+    Contact activeContact =
+        Provider.of<ContactData>(context, listen: false).getActiveContact;
+
+    print("Active Contact Name: " + activeContact.name.toString());
+
+    _emailController.text = activeContact.email ?? '';
+    _nameController.text = activeContact.name ?? '';
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Widget editForm() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Text(
-            "Log In",
+            "Edit Contact",
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 20.0,
@@ -51,17 +65,31 @@ class _AuthLoginScreenState extends State<AuthLoginScreen> {
             child: Column(
               children: <Widget>[
                 TextFormField(
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.words,
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Name',
+                    hintText: 'Name',
+                  ),
+                  validator: (value) {
+                    if (value.isEmpty) {
+                      return 'Required.';
+                    }
+                    if (nameError != null) {
+                      return nameError;
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
                   autofocus: false,
                   keyboardType: TextInputType.emailAddress,
+                  controller: _emailController,
                   decoration: InputDecoration(
-                    labelText: 'Email Address',
-                    hintText: 'Email Address',
+                    labelText: 'Email',
+                    hintText: 'Email',
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      email = value;
-                    });
-                  },
                   validator: (value) {
                     if (value.isEmpty) {
                       return 'Required.';
@@ -72,107 +100,46 @@ class _AuthLoginScreenState extends State<AuthLoginScreen> {
                     return null;
                   },
                 ),
-                TextFormField(
-                  autofocus: false,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Password',
-                  ),
-                  onChanged: (value) {
+                RaisedButton(
+                  child: Text("Save"),
+                  onPressed: () async {
+                    // Reset optional validators
                     setState(() {
-                      password = value;
+                      nameError = null;
                     });
-                  },
-                  validator: (value) {
-                    if (value.isEmpty) {
-                      return 'Required.';
-                    }
-                    if (passwordError != null) {
-                      return passwordError;
-                    }
-                    return null;
-                  },
-                ),
-                StyledButton(
-                  buttonText: 'Log In',
-                  buttonColor: Colors.blue,
-                  buttonOnPressed: () async {
-                    // Reset firebase auth validators
                     setState(() {
                       emailError = null;
                     });
-                    setState(() {
-                      passwordError = null;
-                    });
+
+                    // Optional validators can be performed here
+                    // set nameError or emailError to the appropriate error string for the user
+                    // to block form submission and show the error.
+                    // ex: checking for valid email.
 
                     // Validate the form client-side, then submit to firebase auth
                     if (_formKey.currentState.validate()) {
                       try {
-                        // Show spinner
-                        setState(() {
-                          _showSpinner = true;
-                        });
+                        // SAVE
+                        Contact activeContact =
+                            Provider.of<ContactData>(context, listen: false)
+                                .getActiveContact;
 
-                        // Pass to firebase auth and await response
-                        final user = await _auth.signInWithEmailAndPassword(
-                            email: email, password: password);
+                        // Update activeContact with local state text
+                        activeContact.email = _emailController.text;
+                        activeContact.name = _nameController.text;
 
-                        // Hide spinner
-                        setState(() {
-                          _showSpinner = false;
-                        });
+                        // Save activeContact to persistent storage and update contact list
+                        await Provider.of<ContactData>(context, listen: false)
+                            .saveActiveContactEdits();
 
-                        // If user successfully logged in, pop this screen back to previous
-                        if (user != null) {
-                          Navigator.pop(context);
-                        }
+                        // POP to return to the contacts list
+                        Navigator.pop(context);
                       } catch (e) {
-                        // Hide spinner
-                        setState(() {
-                          _showSpinner = false;
-                        });
-                        print("Auth error.");
                         print(e.code);
-
-                        // Set new errors on form based on firebase auth feedback
-                        if (e.code == "ERROR_INVALID_EMAIL") {
-                          setState(() {
-                            emailError = "Invalid Email Address";
-                          });
-                        }
-
-                        if (e.code == "ERROR_USER_NOT_FOUND") {
-                          setState(() {
-                            emailError =
-                                "No accounts for this email address found.";
-                          });
-                        }
-
-                        if (e.code == "ERROR_WRONG_PASSWORD") {
-                          setState(() {
-                            passwordError = "Incorrect password.";
-                          });
-                        }
-
-                        // Re-Run validation
-                        _formKey.currentState.validate();
                       }
                     }
                   },
                 ),
-                SizedBox(height: 10.0),
-                FlatButton(
-                  child: Text(
-                    "forgot password",
-                    style: TextStyle(color: Colors.blue),
-                  ),
-                  onPressed: () {
-                    Navigator.pushNamed(
-                        context, AuthPasswordResetScreen.screenId);
-                  },
-                ),
-                if (_showSpinner) CircularProgressIndicator(),
               ],
             ),
           ),
@@ -183,29 +150,25 @@ class _AuthLoginScreenState extends State<AuthLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<ContactData>(builder: (context, clientData, child) {
-      Contact activeContact = clientData.getActiveContact();
-
-      return Scaffold(
-        appBar: AppBar(
-          title: Text("Log In"),
-          actions: <Widget>[],
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Container(
-            child: Center(
-              child: Column(
-                children: <Widget>[
-                  Expanded(
-                    child: loginForm(),
-                  ),
-                ],
-              ),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Edit"),
+        actions: <Widget>[],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Container(
+          child: Center(
+            child: Column(
+              children: <Widget>[
+                Expanded(
+                  child: editForm(),
+                ),
+              ],
             ),
           ),
         ),
-      );
-    });
+      ),
+    );
   }
 }

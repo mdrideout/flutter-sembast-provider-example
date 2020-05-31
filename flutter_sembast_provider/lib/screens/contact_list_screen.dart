@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:fluttersembastprovider/common_widgets/contact_list.dart';
 import 'package:fluttersembastprovider/models/contact_data.dart';
+import 'package:fluttersembastprovider/screens/contact_edit_screen.dart';
 import 'package:provider/provider.dart';
 
 class ContactListScreen extends StatelessWidget {
+  static const String screenId = '/contact_list_screen';
+
   /// Returns a helpful message if there are not yet any contacts
   Widget helpTip() {
     return Padding(
@@ -47,10 +50,11 @@ class ContactListScreen extends StatelessWidget {
             print("New contact created with id of: " + newContactId.toString());
 
             // Set the new contact as the "activeContact"
-            Provider.of<ContactData>(context, listen: false)
+            await Provider.of<ContactData>(context, listen: false)
                 .setActiveContact(newContactId);
 
-            // TODO: Navigate to the edit screen
+            // Navigate to the activeContact editor
+            Navigator.pushNamed(context, ContactEditScreen.screenId);
           },
         ),
       );

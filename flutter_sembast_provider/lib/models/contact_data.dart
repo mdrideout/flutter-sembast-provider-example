@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:fluttersembastprovider/utils/database.dart';
 import 'package:sembast/sembast.dart';
+import 'package:random_string/random_string.dart' as random_string;
 import "contact.dart";
 
 class ContactData extends ChangeNotifier {
@@ -21,11 +22,15 @@ class ContactData extends ChangeNotifier {
   /// Create New Contact
   /// Adds a new empty contact to the database, returns the ID
   Future<int> createNewContact() async {
-    // Create the new contact
-    Contact newContact = Contact();
+    // Generate a random ID based on the date and a random string for virtual zero chance of duplicates
+    int _id = DateTime.now().millisecondsSinceEpoch +
+        int.parse(random_string.randomNumeric(2));
 
-    // Add the contact to the database
-    int _contactId = await _contactStore.add(await _db, newContact.toMap());
+    // Create the new contact object with an id (makes saving in the future easier)
+    Contact newContact = Contact(id: _id);
+
+    // Add the contact to the database with the specified id
+    await _contactStore.record(_id).put(await _db, newContact.toMap());
 
     // Update the UI by fetching a list of contacts from the DB and setting to our provider List
     _contacts = await getAllContactsByName();
@@ -34,7 +39,7 @@ class ContactData extends ChangeNotifier {
     notifyListeners();
 
     // Return the ID
-    return _contactId;
+    return _id;
   }
 
   /// Get All Contacts By Name
@@ -50,8 +55,6 @@ class ContactData extends ChangeNotifier {
 
     List<Contact> contacts = contactSnapshots.map((snapshot) {
       final contact = Contact.fromMap(snapshot.value);
-
-      contact.id = snapshot.key;
       return contact;
     }).toList();
 
@@ -70,9 +73,50 @@ class ContactData extends ChangeNotifier {
 
     // Convert to a Contact Object using the fromMap function
     Contact contact = Contact.fromMap(record);
-//    print("Contact: " + contact.toString()); // instance of a contact object
+//    print(
+//        "Contact id: " + contact.id.toString()); // instance of a contact object
 
     return contact;
+  }
+
+  /// Save Active Contact Edits
+  /// When we edit the activeContact object, we can save it to persistent storage in the sembast store
+  Future<void> saveActiveContactEdits() async {
+//    print("Saving Active Contact, id: " + _activeContact.id.toString());
+//    print("Saving Active Contact, name: " + _activeContact.name.toString());
+
+    // Create a finder to isolate this contact for update, by key (id).
+    final finder = Finder(filter: Filter.byKey(_activeContact.id));
+
+    // Perform the update converting, converting the contact to map, and updating the value at key identified by the finder
+    await _contactStore.update(await _db, _activeContact.toMap(),
+        finder: finder);
+
+    // Refresh contacts list for UI
+    await getAllContactsByName();
+
+    return;
+  }
+
+  /// Set Active Contact
+  Future<void> setActiveContact(int id) async {
+    _activeContact = await getContact(id);
+//    print("Active Contact Set, ID: " + _activeContact.id.toString());
+
+    notifyListeners();
+    return;
+  }
+
+  /// Delete Contact
+  /// Deletes contact from Sembast persistent storage, as well as the UI via a provider update
+  Future<void> deleteContact(int id) async {
+    // Delete this contact from the db
+    await _contactStore.record(id).delete(await _db);
+
+    // Refresh contacts list for UI
+    await getAllContactsByName();
+
+    return;
   }
 
   /// Get Contacts Count
@@ -85,16 +129,8 @@ class ContactData extends ChangeNotifier {
     return _contacts;
   }
 
-  // TODO: Save Contact
-
-  // TODO: Delete Contact
-
-  // TODO: Set Active Contact
-  /// Set Active Contact
-  void setActiveContact(int id) async {
-    _activeContact = await getContact(id);
-    notifyListeners();
+  /// Get Active Contact
+  Contact get getActiveContact {
+    return _activeContact;
   }
-
-  // TODO: Get Active Contact
 }
