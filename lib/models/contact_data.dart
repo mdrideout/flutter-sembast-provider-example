@@ -35,9 +35,6 @@ class ContactData extends ChangeNotifier {
     // Update the UI by fetching a list of contacts from the DB and setting to our provider List
     _contacts = await getAllContactsByName();
 
-    // Notify our listeners to update
-    notifyListeners();
-
     // Return the ID
     return _id;
   }

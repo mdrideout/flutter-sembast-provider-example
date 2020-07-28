@@ -92,7 +92,7 @@ class ContactViewScreen extends StatelessWidget {
       if (activeContact != null) {
         return Scaffold(
           appBar: AppBar(
-            title: Text(activeContact.name),
+            title: Text(activeContact.name ?? "New Contact"),
             actions: <Widget>[
               PopupMenuButton(
                 icon: Icon(Icons.more_vert),
@@ -132,7 +132,7 @@ class ContactViewScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      activeContact.name,
+                      activeContact.name ?? "New Contact",
                       style: TextStyle(
                         fontSize: 20.0,
                         fontWeight: FontWeight.bold,
@@ -140,7 +140,7 @@ class ContactViewScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 10.0),
                     Text(
-                      activeContact.email,
+                      activeContact.email ?? "",
                       style: TextStyle(
                         fontSize: 16.0,
                         fontWeight: FontWeight.normal,
